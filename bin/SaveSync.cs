@@ -12,8 +12,9 @@
 // Navigation: D-pad / left stick / WASD / arrow keys move, A or Enter activates,
 // B or Esc goes back. Anything that overwrites a live save asks first.
 //
-// Nothing here targets a machine. ludusavi writes to C:\SaveSync\ludusavi and
-// Syncthing replicates that folder to every connected peer (PC, Deck, Pi).
+// Nothing here targets a machine. ludusavi writes to its own configured backup
+// folder and Syncthing replicates that folder to every connected peer.
+// Paths and endpoints are resolved at runtime - see the Sync class and README.
 //
 // Paths use forward slashes on purpose - Windows accepts them, and it keeps the
 // source free of backslash escapes.
@@ -123,7 +124,34 @@ public class Restore
 
 public static class Sync
 {
-    public const string Script = "C:/SaveSync/bin/savesync.ps1";
+    // Nothing here is tied to a machine. The dispatcher is found next to this
+    // exe, so SaveSync works from whatever folder you unzipped it into, and
+    // every setting below can be overridden with an environment variable.
+    public static string Dir()
+    {
+        return Path.GetDirectoryName(
+            System.Reflection.Assembly.GetExecutingAssembly().Location);
+    }
+
+    public static string Env(string name, string fallback)
+    {
+        string v = Environment.GetEnvironmentVariable(name);
+        return string.IsNullOrEmpty(v) ? fallback : v;
+    }
+
+    // SAVESYNC_SCRIPT     full path to savesync.ps1   (default: next to the exe)
+    // SAVESYNC_LOG        autopush log                (default: next to the exe)
+    // SAVESYNC_ST_URL     Syncthing REST endpoint     (default: the local instance)
+    // SAVESYNC_ST_FOLDER  Syncthing folder id to rescan
+    public static string Script
+    {
+        get { return Env("SAVESYNC_SCRIPT", Path.Combine(Dir(), "savesync.ps1")); }
+    }
+
+    public static string LogPath()
+    {
+        return Env("SAVESYNC_LOG", Path.Combine(Dir(), "autopush.log"));
+    }
 
     public static string ConfPath()
     {
@@ -172,7 +200,9 @@ public static class Sync
             if (node == null) return "no api key";
 
             HttpWebRequest req = (HttpWebRequest)WebRequest.Create(
-                "http://127.0.0.1:8384/rest/db/scan?folder=savesync-ludusavi");
+                Env("SAVESYNC_ST_URL", "http://127.0.0.1:8384") +
+                "/rest/db/scan?folder=" +
+                Env("SAVESYNC_ST_FOLDER", "savesync-ludusavi"));
             req.Method = "POST";
             req.Headers.Add("X-API-Key", node.InnerText);
             req.ContentLength = 0;
@@ -778,7 +808,7 @@ public static class Program
                 int code = Sync.Run(mode, g.Key, null, out summary);
                 try
                 {
-                    File.AppendAllText("C:/SaveSync/bin/autopush.log",
+                    File.AppendAllText(Sync.LogPath(),
                         DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "  " + mode + "  " + g.Key +
                         "  exit=" + code + "  " + summary + Environment.NewLine);
                 }

@@ -4,10 +4,10 @@ rem SaveSync generic Steam launch wrapper (Windows).
 rem created by Claude, 2026-09-22. Replaces the per-game spiderman-savesync.cmd.
 rem
 rem Steam launch options:
-rem   "C:\SaveSync\bin\savesync-launch.cmd" <key> %%command%%
+rem   "<install folder>\savesync-launch.cmd" <key> %%command%%
 rem e.g.
-rem   "C:\SaveSync\bin\savesync-launch.cmd" spiderman %%command%%
-rem   "C:\SaveSync\bin\savesync-launch.cmd" bo1 %%command%%
+rem   "C:\SaveSync\savesync-launch.cmd" spiderman %%command%%
+rem   "C:\SaveSync\savesync-launch.cmd" bo1 %%command%%
 rem
 rem <key> is a short name from %APPDATA%\savesync\games.conf.
 rem Windows launch options have no shell, so this .cmd provides one:
@@ -20,8 +20,9 @@ if "%KEY%"=="" (
 )
 shift
 
-set EXE=C:\SaveSync\bin\SaveSync.exe
-set LOG=C:\SaveSync\bin\savesync-launch.log
+rem Resolve siblings from this script's own folder, so the install can live anywhere.
+set EXE=%~dp0SaveSync.exe
+set LOG=%~dp0savesync-launch.log
 
 rem %* still holds the original first arg, so rebuild the game command from %1 onward
 set CMD=

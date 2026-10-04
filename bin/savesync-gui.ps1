@@ -3,7 +3,8 @@
 Add-Type -AssemblyName System.Windows.Forms, System.Drawing
 $ErrorActionPreference = 'Stop'
 
-$script = 'C:\SaveSync\bin\savesync.ps1'
+# Sibling of this script, so the install folder is not baked in.
+$script = Join-Path $PSScriptRoot 'savesync.ps1'
 $key    = 'spiderman'
 
 $f = New-Object Windows.Forms.Form

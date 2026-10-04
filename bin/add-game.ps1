@@ -29,12 +29,13 @@ param(
     [Parameter(Mandatory)][string]$Name,
     [string]$WindowsPath = "",
     [string]$DeckPath = "",
-    [string]$DeckHost = "deck@steamdeck.local",
+    # Override per-run with -DeckHost, or set SAVESYNC_PEER_HOST once.
+    [string]$DeckHost = $(if ($env:SAVESYNC_PEER_HOST) { $env:SAVESYNC_PEER_HOST } else { "deck@steamdeck.local" }),
     [switch]$DryRun
 )
 
 $ErrorActionPreference = 'Stop'
-$py = 'C:\SaveSync\bin\add_game.py'
+$py = Join-Path $PSScriptRoot 'add_game.py'
 
 # Build argument lists, omitting empty ones entirely: passing an empty string to
 # argparse makes it swallow the next flag as the value.
