@@ -1,0 +1,8 @@
+# Build output
+*.exe
+*.pdb
+
+# Runtime state - never commit, these contain real paths and save data
+*.log
+games.conf
+ludusavi/
